@@ -22,7 +22,7 @@ base_raster <- raster(files[1]) %>% reclassify(rcl = c(-Inf, presence_threshold,
 # Read in each of the other sebastes rasters
 for (i in c(2:length(files))) {
   # Reclassify as present (1) or not present (0) based on 0.75 probability threshold
-  temp <- raster(files[i]) %>% reclassify(rcl = c(-Inf, 0.75, 0, 0.75,1,1))
+  temp <- raster(files[i]) %>% reclassify(rcl = c(-Inf, presence_threshold, 0, presence_threshold,1,1))
   # Also set any NAs to 0
   temp[is.na(temp[])] <- 0 
   
