@@ -2,6 +2,9 @@ library(here)
 library(tidyverse)
 library(raster)
 
+# Set our probability threshold for a species to be considered "present"
+presence_threshold = 0.75
+
 # Get list of all the sebastes files
 files <- list.files(path=here("sebastes"), pattern="*.tif", full.names=TRUE, recursive=FALSE)
 
@@ -14,7 +17,7 @@ threats_all <- raster(here("full_modelnv.tif"))
 #sebastes_richness <- raster::calc(presence_stack, fun = sum)
 
 # Read in first sebastes raster
-base_raster <- raster(files[1]) %>% reclassify(rcl = c(-Inf, 0.75, 0, 0.75,1,1))
+base_raster <- raster(files[1]) %>% reclassify(rcl = c(-Inf, presence_threshold, 0, presence_threshold,1,1))
 
 # Read in each of the other sebastes rasters
 for (i in c(2:length(files))) {
