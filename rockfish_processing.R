@@ -50,7 +50,7 @@ threats_all <- raster(here("full_modelnv.tif"))
 total_richness <- raster(here("ca_curr_sp_rich.tif"))
 
 # Find hotspots
-cumulative_hotspots <- calculate_hotspots(total_richness, threats_all,"cumulative")
+cumulative_hotspots <- calculate_hotspots(total_richness, threats_all,"total")
 writeRaster(cumulative_hotspots, "hotspots_cumulative.tif", overwrite = TRUE)
 
 
@@ -78,14 +78,38 @@ for (i in c(2:length(files))) {
 
 #writeRaster(rockfish_raster, "rockfish_richness.tif", overwrite = TRUE)
 
-# Calculate rockfish+dem destr fishing hotspots
-threats_ddf <- raster(here("impact_dem_d.tif"))
-rockfish_ddf_hotspots <- calculate_hotspots(rockfish_raster, threats_ddf)
-writeRaster(hotspots_ddf, "hotspots_dem_des_fish.tif", overwrite = TRUE)
+# Calculate rockfish+commercial fishing hotspots
+files <- list.files(path=here("fishing"), pattern="*.tif", full.names=TRUE, recursive=FALSE)
+
+# Read in first commercial fishing raster
+fishing_raster <- raster(files[1])
+fishing_raster[is.na(fishing_raster[])] <- 0
+fishing_raster <- reclassify(fishing_raster, c(-Inf, 0, 0), right=TRUE)
+
+# Read in each of the other commercial fishing rasters
+for (i in c(2:length(files))) {
+  temp <- raster(files[i])
+  # Also set any NAs to 0
+  temp[is.na(temp[])] <- 0 
+  temp <- reclassify(temp, c(-Inf, 0, 0), right=TRUE)
+  
+  
+  # Add this raster to the cumulative sum of other commercial fishing threat rasters
+  fishing_raster <- sum(fishing_raster, temp)
+}
+
+#writeRaster(fishing_raster, "commercial_fishing_threat.tif", overwrite = TRUE)
+
+rockfish_commercial_hotspots <- calculate_hotspots(rockfish_raster, fishing_raster)
+writeRaster(rockfish_commercial_hotspots, "hotspots_commercial_fish.tif", overwrite = TRUE)
 
 # Calculate rockfish+dem destr fishing hotspots
 threats_rf <- raster(here("impact_rec_fish.tif"))
 rockfish_rf_hotspots <- calculate_hotspots(rockfish_raster, threats_rf)
-writeRaster(hotspots_rf, "hotspots_rec_fish.tif", overwrite = TRUE)
+writeRaster(rockfish_rf_hotspots, "hotspots_rec_fish.tif", overwrite = TRUE)
+
+# Calculate rockfish+dem destr fishing hotspots
+rockfish_cumulative_hotspots <- calculate_hotspots(rockfish_raster, threats_all, "cumlt")
+writeRaster(rockfish_cumulative_hotspots, "hotspots_rockfish_cumulative.tif", overwrite = TRUE)
 
 
